@@ -1,25 +1,32 @@
-// Game.tsx
 import { Card, createDeck, shuffleDeck } from '../Components/Deck';
 import { useState } from 'react';
 import Player from '../Player';
 import PlayerControls from './PlayerControls';
+import Dealer from './Dealer';
 
 const Game: React.FC = () => {
     const totalDecks = 7;
     const [deck, setDeck] = useState<Card[]>(shuffleDeck(createDeck(totalDecks)));
     const [cardValue, setCardValue] = useState<Card[] | null>(null);
+    const [dealerCards, setDealerCards] = useState<Card[] | null>(null);
     const [isTwoCardDrawn, setIsTwoCardDrawn] = useState<boolean>(false);
     const [isGameLost, setIsGameLost] = useState<boolean>(false);
 
-    const drawTwoCards = () => {
-        if (deck.length >= 2) {
-            const firstCard = deck[0];
-            const secondCard = deck[1];
-            setCardValue([firstCard, secondCard]);
-            setDeck(deck.slice(2));
-            setIsTwoCardDrawn(true);
+    const drawCards = async () => {
+        if (deck.length > deck.length / 2) {
+          const playerFirstCard = deck[0];
+          const playerSecondCard = deck[1];
+          const dealerFirstCard = deck[2];
+          const dealerSecondCard: Card = { ...deck[3], hidden: true as const };
+          setCardValue([playerFirstCard, playerSecondCard]);
+          setDealerCards([dealerFirstCard, dealerSecondCard]);
+      
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+      
+          setDeck(deck.slice(4));
+          setIsTwoCardDrawn(true);
         }
-    };
+      };
 
     const drawCard = () => {
         if (deck.length > 0) {
@@ -38,20 +45,7 @@ const Game: React.FC = () => {
         }
     };
 
-    const stay = () => {
-        console.log("Player chose to stay.");
-    };
 
-    const split = () => {
-
-        console.log("Player chose to split.");
-    };
-
-
-    const double = () => {
-        console.log("Player chose to double.");
-        drawCard();
-    };
 
     const resetGame = () => {
         setDeck(shuffleDeck(createDeck(totalDecks)));
@@ -62,18 +56,12 @@ const Game: React.FC = () => {
 
     return (
         <>
+       <Dealer dealerCards={dealerCards} drawCard={drawCard} />
             {!isGameLost ? (
                 !isTwoCardDrawn ? (
-                    <button onClick={drawTwoCards}>Start the Game</button>
+                    <button onClick={drawCards}>Start the Game</button>
                 ) : (
-                    <PlayerControls
-                        drawCard={drawCard}
-                        stay={stay}
-                        split={split}
-                        double={double}
-                        cardValue={cardValue}
-                        isGameLost={isGameLost}
-                    />
+                    <PlayerControls drawCard={drawCard} cardValue={null} isGameLost={false}/>
                 )
             ) : (
                 <>
