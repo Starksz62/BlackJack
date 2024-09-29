@@ -1,4 +1,5 @@
 export interface Card {
+    hidden: boolean;
     suit: 'Hearts' | 'Diamonds' | 'Clubs' | 'Spades';
     value: string;
     valueCard: number;
@@ -15,6 +16,7 @@ values.map((value, index) => ({
   suit,
   value,
   valueCard: value === 'A' ? 11 : (value === 'K' || value === 'Q' || value === 'J' ? 10 : index + 2),
+  hidden: false,
 })))
 const MultipleDecks: Deck = Array.from({ length: numberOfDecks }).flatMap(() => Mixdeck)
     return MultipleDecks;
