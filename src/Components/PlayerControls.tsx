@@ -9,7 +9,6 @@ interface PlayerControlsProps {
 
 const PlayerControls: React.FC<PlayerControlsProps> = ({
   drawCard,
-  cardValue,
   isGameLost,
 }) => {
   const stay = () => {
