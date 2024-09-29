@@ -1,41 +1,17 @@
 import { Card } from "./Components/Deck";
-
+import {calculateScore} from "./Utils";
 interface PlayerProps {
     cardValue: Card[] | null;
 }
 
 const Player: React.FC<PlayerProps> = ({ cardValue }) => {
-    const calculateTotal = (cards: Card[] | null): number => {
-        if (!cards) return 0;
 
-        let score = 0;
-        let aceCount = 0;
-
-        cards.forEach(card => {
-            if (card.value === 'A') {
-                score += 11; 
-                aceCount++;
-            } else if (['K', 'Q', 'J'].includes(card.value)) {
-                score += 10;
-            } else {
-                score += parseInt(card.value); 
-            }
-        });
-
-        while (score > 21 && aceCount > 0) {
-            score -= 10;
-            aceCount--;
-        }
-
-        return score;
-    };
-
-    const totalScore = calculateTotal(cardValue); 
+    const totalScorePlayer = calculateScore(cardValue); 
 
     return (
         <div>
             <h1>Player's Cards</h1>
-            <h2>Total Score: {totalScore}</h2>
+            <h2>Total Score: {totalScorePlayer}</h2>
             {cardValue ? (
                 cardValue.map((card, index) => (
                     <div key={index}>

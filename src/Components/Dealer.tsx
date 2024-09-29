@@ -2,13 +2,27 @@ import { Card } from "./Deck";
 
 interface DealerProps {
     dealerCards: Card[] | null;
-    drawCard: () => void;
+    dealerScore: number;
 }
 
-const Dealer: React.FC<DealerProps> = ({ dealerCards }) => {
+const Dealer: React.FC<DealerProps> = ({ dealerCards, dealerScore }) => {
+
+
+  if (dealerCards) {
+      dealerCards.forEach((card) => {
+          if (card.hidden) {
+              console.log(` ${card.value}`);
+          } else {
+              console.log(` ${card.suit} ${card.value}`);
+          }
+      });
+  }
+
+
     return (
         <div>
           <h1>Cartes du croupier</h1>
+          <p>{dealerScore}</p>
           {dealerCards ? (
             dealerCards.map((card, index) => (
               <div key={index}>
