@@ -8,7 +8,11 @@ interface PlayerControlsProps {
   setDeck: (deck: Card[]) => void;
   setIsGameLost: (isLost: boolean) => void;
   DrawCardDealer: () => void;
-  isGameLost: boolean
+  isGameLost: boolean;
+  isGameWon: boolean;
+  isGameDraw: boolean;
+  dealerScore: number;
+  resetGame: () => void;
 }
 
 const PlayerControls: React.FC<PlayerControlsProps> = ({
@@ -18,37 +22,41 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
   setDeck,
   setIsGameLost,
   DrawCardDealer,
-  isGameLost
+  isGameLost,
+  isGameWon,
+  isGameDraw,
+  resetGame
 }) => {
-  
   const drawCard = () => {
-    if (isGameLost) {
+    if (isGameLost || isGameWon || isGameDraw) {
+        return
+    }
+
+    const drawnCard = deck[0];
+    const newCardValue = [...(cardValue || []), drawnCard];
+    
+    const total = calculateScore(newCardValue);
+
+    setCardValue(newCardValue);
+    setDeck(deck.slice(1));
+    if (total > 21) {
+      setIsGameLost(true);
+      console.log("Bust");
+      setTimeout(resetGame,2000)
       return;
     }
+};
 
-    if (deck.length > 0) {
-      const drawnCard = deck[0];
-      const newCardValue = [...(cardValue || []), drawnCard];
-      
-      const total = calculateScore(newCardValue);
-
-      if (total > 21) {
-        setIsGameLost(true); 
-      }
-
-      setCardValue(newCardValue);
-      setDeck(deck.slice(1));
-    }
-  };
   const stay = () => {
-    console.log("Player chose to stay.");
+
     DrawCardDealer();
   };
 
   const split = () => {
-    console.log("Player chose to split.");
+    if (cardValue && cardValue.length > 1 && cardValue[0].value === cardValue[1].value) {
+      return console.log("player split")
+    }
   };
-
 
   const double = () => {
     if (isGameLost || (cardValue && cardValue.length >= 3)) {
@@ -62,8 +70,14 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
     <div>
       <button onClick={drawCard}>Draw Card</button>
       <button onClick={stay}>Stay</button>
-      <button onClick={split}>Split</button>
-      <button onClick={double}>Double</button>
+      {cardValue && cardValue.length > 1 && cardValue[0].value === cardValue[1].value && (
+        <button onClick={split}>Split</button>
+      )}
+{cardValue?.length === 2 && (
+  <button onClick={double} disabled={cardValue?.length > 2}>
+    Double
+  </button>
+)}
     </div>
   );
 };

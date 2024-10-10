@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import { Card } from "./Deck";
 
 interface DealerProps {
@@ -7,37 +8,27 @@ interface DealerProps {
 
 const Dealer: React.FC<DealerProps> = ({ dealerCards, dealerScore }) => {
 
+    const renderedDealerCards = useMemo(() => {
+        if (!dealerCards) return null;
 
-  if (dealerCards) {
-      dealerCards.forEach((card) => {
-          if (card.hidden) {
-              console.log(` ${card.value}`);
-          } else {
-              console.log(` ${card.suit} ${card.value}`);
-          }
-      });
-  }
-
+        return dealerCards.map((card, index) => (
+            <div key={index}>
+                {card.hidden ? (
+                    <p>Carte cachée</p>
+                ) : (
+                    <p>Carte : {card.suit} {card.value}</p>
+                )}
+            </div>
+        ));
+    }, [dealerCards]);
 
     return (
         <div>
-          <h1>Cartes du croupier</h1>
-          <p>{dealerScore}</p>
-          {dealerCards ? (
-            dealerCards.map((card, index) => (
-              <div key={index}>
-                {card.hidden ? (
-                  <p>Carte cachée</p>
-                ) : (
-                  <p>Carte : {card.suit} {card.value}</p>
-                )}
-              </div>
-            ))
-          ) : (
-            <p>Pas encore de cartes distribuées pour le croupier</p>
-          )}
+            <h1>Cartes du croupier</h1>
+            <p>{dealerScore}</p>
+            {renderedDealerCards || <p>Pas encore de cartes distribuées pour le croupier</p>}
         </div>
     );
 }
 
-export default Dealer;
+export default React.memo(Dealer);

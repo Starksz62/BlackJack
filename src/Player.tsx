@@ -6,8 +6,8 @@ interface PlayerProps {
 
 const Player: React.FC<PlayerProps> = ({ cardValue }) => {
 
-    const totalScorePlayer = calculateScore(cardValue); 
-
+    const totalScorePlayer = cardValue !== null ? calculateScore(cardValue) : 0;
+    
     return (
         <div>
             <h1>Player's Cards</h1>

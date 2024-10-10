@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { drawDealerCard, calculateScore, determineGameResult } from '../Utils';
 import { Card, createDeck, shuffleDeck } from '../Components/Deck';
 import Player from '../Player';
@@ -12,7 +12,10 @@ const Game: React.FC = () => {
     const [dealerCards, setDealerCards] = useState<Card[] | null>(null);
     const [isTwoCardDrawn, setIsTwoCardDrawn] = useState<boolean>(false);
     const [isGameLost, setIsGameLost] = useState<boolean>(false);
+    const [isGameWon, setIsGameWon] = useState<boolean>(false);
+    const [isGameDraw, setIsGameDraw] = useState<boolean>(false);
     const [gameResult, setGameResult] = useState<string | null>(null);
+    const initialDeck = createDeck(totalDecks);
 
     const drawCards = useCallback(async () => {
         if (deck.length > deck.length / 2) {
@@ -26,43 +29,40 @@ const Game: React.FC = () => {
             setDeck(deck.slice(4));
             setIsTwoCardDrawn(true);
         }
-    }, [deck]); // Notez que la dépendance est 'deck'
+    }, [deck]);
 
     const resetGame = useCallback(() => {
-        setDeck(shuffleDeck(createDeck(totalDecks)));
+        const newDeck = shuffleDeck([...initialDeck]);
+        setDeck(newDeck); 
         setCardValue(null);
         setDealerCards(null);
         setIsTwoCardDrawn(false);
         setGameResult(null);
         setIsGameLost(false);
-    }, []);
+        setIsGameWon(false);
+        setIsGameDraw(false);
+    }, [initialDeck]);
 
     const handleDealerDraw = useCallback(() => {
         if (dealerCards) {
-            const { newDealerCards, updatedDeck } = drawDealerCard(deck, dealerCards);
-            setDealerCards(newDealerCards);
-            setDeck(updatedDeck);
-            
-            const visibleDealerCards = newDealerCards.filter(card => !card.hidden);
-            const dealerScore = calculateScore(visibleDealerCards);
-            const playerScore = calculateScore(cardValue);
-            
-            const result = determineGameResult(playerScore, dealerScore, setIsGameLost);
-            setGameResult(result);
+            setDeck((prevDeck) => {
+                const { newDealerCards, updatedDeck } = drawDealerCard(prevDeck, dealerCards);
+                setDealerCards(newDealerCards);
+    
+                const visibleDealerCards = newDealerCards.filter(card => !card.hidden);
+                const dealerScore = calculateScore(visibleDealerCards);
+                const playerScore = cardValue ? calculateScore(cardValue) : 0;
+    
+                const result = determineGameResult(playerScore, dealerScore, setIsGameLost,setIsGameWon,setIsGameDraw);
+                console.log(result);
+                setGameResult(result);
+                return updatedDeck;
+            });
         }
-    }, [deck, dealerCards, cardValue]);
-
-    const dealerScore = useMemo(() => {
-        if (dealerCards) {
-            const visibleDealerCards = dealerCards.filter(card => !card.hidden);
-            return calculateScore(visibleDealerCards);
-        }
-        return 0;
-    }, [dealerCards]);
-
+    }, [dealerCards, cardValue]);
     return (
         <>
-            <Dealer dealerCards={dealerCards} dealerScore={dealerScore} />
+            <Dealer dealerCards={dealerCards} dealerScore={dealerCards ? calculateScore(dealerCards.filter(card => !card.hidden)) : 0} />
             {gameResult && <p>{gameResult}</p>}
             {!gameResult ? (
                 !isTwoCardDrawn ? (
@@ -76,12 +76,17 @@ const Game: React.FC = () => {
                         setIsGameLost={setIsGameLost}
                         DrawCardDealer={handleDealerDraw}
                         isGameLost={isGameLost}
+                        isGameWon={isGameWon}
+                        isGameDraw={isGameDraw}
+                        dealerScore={dealerCards ? calculateScore(dealerCards.filter(card => !card.hidden)) : 0} // Calculer le score ici
+                        resetGame={resetGame}
                     />
                 )
             ) : (
                 <button onClick={resetGame}>Restart Game</button>
             )}
             <Player cardValue={cardValue} />
+         
         </>
     );
 };
