@@ -1,5 +1,6 @@
+import React, { useState, useCallback } from 'react';
+import { drawDealerCard, calculateScore, determineGameResult } from '../Utils';
 import { Card, createDeck, shuffleDeck } from '../Components/Deck';
-import { useState } from 'react';
 import Player from '../Player';
 import PlayerControls from './PlayerControls';
 import Dealer from './Dealer';
@@ -11,65 +12,81 @@ const Game: React.FC = () => {
     const [dealerCards, setDealerCards] = useState<Card[] | null>(null);
     const [isTwoCardDrawn, setIsTwoCardDrawn] = useState<boolean>(false);
     const [isGameLost, setIsGameLost] = useState<boolean>(false);
+    const [isGameWon, setIsGameWon] = useState<boolean>(false);
+    const [isGameDraw, setIsGameDraw] = useState<boolean>(false);
+    const [gameResult, setGameResult] = useState<string | null>(null);
+    const initialDeck = createDeck(totalDecks);
 
-    const drawCards = async () => {
+    const drawCards = useCallback(async () => {
         if (deck.length > deck.length / 2) {
-          const playerFirstCard = deck[0];
-          const playerSecondCard = deck[1];
-          const dealerFirstCard = deck[2];
-          const dealerSecondCard: Card = { ...deck[3], hidden: true as const };
-          setCardValue([playerFirstCard, playerSecondCard]);
-          setDealerCards([dealerFirstCard, dealerSecondCard]);
-      
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-          setDeck(deck.slice(4));
-          setIsTwoCardDrawn(true);
+            const playerFirstCard = deck[0];
+            const playerSecondCard = deck[1];
+            const dealerFirstCard = deck[2];
+            const dealerSecondCard: Card = { ...deck[3], hidden: true as const };
+
+            setCardValue([playerFirstCard, playerSecondCard]);
+            setDealerCards([dealerFirstCard, dealerSecondCard]);
+            setDeck(deck.slice(4));
+            setIsTwoCardDrawn(true);
         }
-      };
+    }, [deck]);
 
-    const drawCard = () => {
-        if (deck.length > 0) {
-            const drawnCard = deck[0];
-            const newCardValue = [...(cardValue || []), drawnCard];
-            const total = newCardValue.reduce((acc, card) => acc + (parseInt(card.value) || 10), 0);
-
-            if (total > 21) {
-                setIsGameLost(true);
-                setCardValue(null);
-                setIsTwoCardDrawn(false);
-            } else {
-                setCardValue(newCardValue);
-                setDeck(deck.slice(1));
-            }
-        }
-    };
-
-
-
-    const resetGame = () => {
-        setDeck(shuffleDeck(createDeck(totalDecks)));
+    const resetGame = useCallback(() => {
+        const newDeck = shuffleDeck([...initialDeck]);
+        setDeck(newDeck); 
         setCardValue(null);
+        setDealerCards(null);
         setIsTwoCardDrawn(false);
+        setGameResult(null);
         setIsGameLost(false);
-    };
+        setIsGameWon(false);
+        setIsGameDraw(false);
+    }, [initialDeck]);
 
+    const handleDealerDraw = useCallback(() => {
+        if (dealerCards) {
+            setDeck((prevDeck) => {
+                const { newDealerCards, updatedDeck } = drawDealerCard(prevDeck, dealerCards);
+                setDealerCards(newDealerCards);
+    
+                const visibleDealerCards = newDealerCards.filter(card => !card.hidden);
+                const dealerScore = calculateScore(visibleDealerCards);
+                const playerScore = cardValue ? calculateScore(cardValue) : 0;
+    
+                const result = determineGameResult(playerScore, dealerScore, setIsGameLost,setIsGameWon,setIsGameDraw);
+                console.log(result);
+                setGameResult(result);
+                return updatedDeck;
+            });
+        }
+    }, [dealerCards, cardValue]);
     return (
         <>
-       <Dealer dealerCards={dealerCards} drawCard={drawCard} />
-            {!isGameLost ? (
+            <Dealer dealerCards={dealerCards} dealerScore={dealerCards ? calculateScore(dealerCards.filter(card => !card.hidden)) : 0} />
+            {gameResult && <p>{gameResult}</p>}
+            {!gameResult ? (
                 !isTwoCardDrawn ? (
                     <button onClick={drawCards}>Start the Game</button>
                 ) : (
-                    <PlayerControls drawCard={drawCard} cardValue={null} isGameLost={false}/>
+                    <PlayerControls
+                        deck={deck}
+                        cardValue={cardValue}
+                        setCardValue={setCardValue}
+                        setDeck={setDeck}
+                        setIsGameLost={setIsGameLost}
+                        DrawCardDealer={handleDealerDraw}
+                        isGameLost={isGameLost}
+                        isGameWon={isGameWon}
+                        isGameDraw={isGameDraw}
+                        dealerScore={dealerCards ? calculateScore(dealerCards.filter(card => !card.hidden)) : 0} // Calculer le score ici
+                        resetGame={resetGame}
+                    />
                 )
             ) : (
-                <>
-                    <h2>You Lost! Total exceeded 21.</h2>
-                    <button onClick={resetGame}>Restart Game</button>
-                </>
+                <button onClick={resetGame}>Restart Game</button>
             )}
             <Player cardValue={cardValue} />
+         
         </>
     );
 };
