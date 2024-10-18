@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { drawDealerCard, calculateScore, determineGameResult } from '../Utils';
+import { useSplitCards } from "../Context/SplitContext";
 import { Card, createDeck, shuffleDeck } from '../Components/Deck';
 import Player from '../Player';
 import PlayerControls from './PlayerControls';
@@ -17,6 +18,8 @@ const Game: React.FC = () => {
     const [gameResult, setGameResult] = useState<string | null>(null);
     const initialDeck = createDeck(totalDecks);
 
+
+    const { splitCards } = useSplitCards(); 
     const drawCards = useCallback(async () => {
         if (deck.length > deck.length / 2) {
             const playerFirstCard = deck[0];
@@ -28,6 +31,8 @@ const Game: React.FC = () => {
             setDealerCards([dealerFirstCard, dealerSecondCard]);
             setDeck(deck.slice(4));
             setIsTwoCardDrawn(true);
+            console.log("Player's cards:", playerSecondCard, playerFirstCard);
+
         }
     }, [deck]);
 
@@ -51,15 +56,21 @@ const Game: React.FC = () => {
     
                 const visibleDealerCards = newDealerCards.filter(card => !card.hidden);
                 const dealerScore = calculateScore(visibleDealerCards);
-                const playerScore = cardValue ? calculateScore(cardValue) : 0;
     
-                const result = determineGameResult(playerScore, dealerScore, setIsGameLost,setIsGameWon,setIsGameDraw);
-                console.log(result);
-                setGameResult(result);
+                const playerScores = splitCards ? splitCards.map(hand => calculateScore(hand)) : [cardValue ? calculateScore(cardValue) : 0];
+
+                const results = playerScores.map((playerScore, index) => {
+                    const result = determineGameResult([playerScore], dealerScore, setIsGameLost, setIsGameWon, setIsGameDraw);
+                    return `Hand ${index + 1}: ${result}`;
+                });
+    
+                console.log(results);
+                setGameResult(results.join(" | ")); 
                 return updatedDeck;
             });
         }
-    }, [dealerCards, cardValue]);
+    }, [dealerCards, cardValue, splitCards]);
+    
     return (
         <>
             <Dealer dealerCards={dealerCards} dealerScore={dealerCards ? calculateScore(dealerCards.filter(card => !card.hidden)) : 0} />
@@ -80,6 +91,7 @@ const Game: React.FC = () => {
                         isGameDraw={isGameDraw}
                         dealerScore={dealerCards ? calculateScore(dealerCards.filter(card => !card.hidden)) : 0} // Calculer le score ici
                         resetGame={resetGame}
+                        
                     />
                 )
             ) : (

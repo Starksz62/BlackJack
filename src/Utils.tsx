@@ -50,37 +50,51 @@ export const drawDealerCard = (deck: Card[], dealerCards: Card[]): { newDealerCa
 
 
 export const determineGameResult = (
-    playerScore: number,
+    playerScores: number[],
     dealerScore: number,
     setIsGameLost: React.Dispatch<React.SetStateAction<boolean>>,
     setIsGameWon: React.Dispatch<React.SetStateAction<boolean>>,
-    setIsGameDraw: React.Dispatch<React.SetStateAction<boolean>> 
+    setIsGameDraw: React.Dispatch<React.SetStateAction<boolean>>
 ): string => {
-    console.log(`Total Player Value: ${playerScore}`);
-    console.log(`Total Dealer Value: ${dealerScore}`);
+    let hasLost = false;
+    let hasWon = false;
+    let hasDraw = false;
 
-    switch (true) {
-        case playerScore > 21:
-            setIsGameLost(true);
-            return "Le joueur a perdu !";
-
-        case dealerScore > 21:
+    playerScores.forEach(playerScore => {
+        if (playerScore > 21) {
+            hasLost = true;
+        } else if (dealerScore > 21) {
+            hasWon = true;
             setIsGameWon(true);
-            return "Le joueur a gagné !";
-
-        case playerScore === dealerScore:
-            setIsGameDraw(true);
-            return "Égalité !";
-
-        case dealerScore > playerScore:
-            setIsGameLost(true);
-            return "Le croupier a gagné !";
-
-        case playerScore > dealerScore:
+        } else if (playerScore === dealerScore) {
+            hasDraw = true;
+        } else if (playerScore > dealerScore) {
+            hasWon = true;
             setIsGameWon(true);
-            return "Le joueur a gagné !";
+        } else {
+            hasLost = true;
+        }
+    });
 
-        default:
-            return "Erreur de logique !"; 
+    if (hasLost) {
+        setIsGameLost(true);
     }
+    if (hasDraw) {
+        setIsGameDraw(true);
+    }
+
+    if (hasLost && hasWon) {
+        return "Résultat mixte : Le joueur a gagné une main mais perdu une autre.";
+    }
+    if (hasLost) {
+        return "Le joueur a perdu !";
+    }
+    if (hasWon) {
+        return "Le joueur a gagné !";
+    }
+    if (hasDraw) {
+        return "Égalité !";
+    }
+
+    return "Erreur de logique !";
 };
