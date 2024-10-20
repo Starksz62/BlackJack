@@ -13,29 +13,35 @@ describe("Blackjack Game Logic", () => {
     });
 
     it("should declare the player as the winner if their score is greater than the dealer's", () => {
-      determineGameResult([22], 21, setIsGameLost, setIsGameWon, setIsGameDraw);
-      expect(setIsGameLost).toHaveBeenCalledWith(true);
-      expect(setIsGameWon).not.toHaveBeenCalled();
+      const playerScore = 17;
+      const dealerScore = 22;
+      determineGameResult([playerScore], dealerScore, setIsGameLost, setIsGameWon, setIsGameDraw);
+      expect(setIsGameWon).toHaveBeenCalledWith(true);
+      expect(setIsGameLost).not.toHaveBeenCalled();
       expect(setIsGameDraw).not.toHaveBeenCalled();
     });
 
     it("should declare the dealer as the winner if their score is greater than the player's", () => {
+      const playerScore = 17;
+      const dealerScore = 19;
       determineGameResult(
-        [18, 20],
-        22,
+        
+        [playerScore],
+        dealerScore,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
       );
 
-      expect(setIsGameWon).toHaveBeenCalledTimes(2);
-      expect(setIsGameLost).not.toHaveBeenCalled();
+      expect(setIsGameWon).not.toHaveBeenCalled();
+      expect(setIsGameLost).toHaveBeenCalledWith(true);
       expect(setIsGameDraw).not.toHaveBeenCalled();
     });
 
     it("should declare a tie if the scores are equal", () => {
-
-        determineGameResult([21], 21, setIsGameLost, setIsGameWon, setIsGameDraw);
+      const playerScore = 20;
+      const dealerScore = 20;
+        determineGameResult([playerScore], dealerScore, setIsGameLost, setIsGameWon, setIsGameDraw);
 
         expect(setIsGameLost).not.toHaveBeenCalled();
         expect(setIsGameWon).not.toHaveBeenCalled();
