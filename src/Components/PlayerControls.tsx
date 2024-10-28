@@ -38,7 +38,6 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
     const drawnCard = deck[0];
     const newCardValue = [...(splitCards ? splitCards[activeHand] : cardValue || []), drawnCard];
     const total = calculateScore(newCardValue);
-    console.log("je suis dans playerControl",total);
 if(splitCards) {
   if (splitCards) {
     const updatedHands = [...splitCards];

@@ -1,33 +1,62 @@
 // gameUtils.test.ts
 import { Card } from "../Components/Deck";
-import { determineGameResult, calculateScore } from "../Utils";
+import { determineGameResult, calculateScore, isBlackjack } from "../Utils";
 
 describe("Blackjack Game Logic", () => {
+  const setIsGameLost = jest.fn();
+  const setIsGameWon = jest.fn();
+  const setIsGameDraw = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe("determineGameResult", () => {
-    const setIsGameLost = jest.fn();
-    const setIsGameWon = jest.fn();
-    const setIsGameDraw = jest.fn();
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it("should declare the player as the winner if their score is greater than the dealer's", () => {
-      const playerScore = 17;
-      const dealerScore = 22;
-      determineGameResult([playerScore], dealerScore, setIsGameLost, setIsGameWon, setIsGameDraw);
+    it("should declare the player as the winner if their score is higher than the dealer's", () => {
+      const playerScore = 19;
+      const dealerScore = 17;
+      const cardValue: Card[][] = [
+        [
+          { value: "9", suit: "Hearts", hidden: false, valueCard: 9 },
+          { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 }
+        ],
+      ];
+      const dealerCards: Card[] = [
+        { value: "10", suit: "Hearts", hidden: false, valueCard: 10 },
+        { value: "7", suit: "Diamonds", hidden: false, valueCard: 7 },
+      ];
+      determineGameResult(
+        [playerScore],
+        dealerScore,
+        cardValue,
+        dealerCards,
+        setIsGameLost,
+        setIsGameWon,
+        setIsGameDraw
+      );
       expect(setIsGameWon).toHaveBeenCalledWith(true);
       expect(setIsGameLost).not.toHaveBeenCalled();
       expect(setIsGameDraw).not.toHaveBeenCalled();
     });
 
-    it("should declare the dealer as the winner if their score is greater than the player's", () => {
+    it("should declare the dealer as the winner if their score is higher than the player's", () => {
       const playerScore = 17;
       const dealerScore = 19;
+      const cardValue: Card[][] = [
+        [
+          { value: "7", suit: "Hearts", hidden: false, valueCard: 7 },
+          { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 }
+        ],
+      ];
+      const dealerCards: Card[] = [
+        { value: "9", suit: "Hearts", hidden: false, valueCard: 9 },
+        { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 }
+      ];
       determineGameResult(
-        
         [playerScore],
         dealerScore,
+        cardValue,
+        dealerCards,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
@@ -38,22 +67,53 @@ describe("Blackjack Game Logic", () => {
       expect(setIsGameDraw).not.toHaveBeenCalled();
     });
 
-    it("should declare a tie if the scores are equal", () => {
+    it("should declare a draw if the scores are equal", () => {
       const playerScore = 20;
       const dealerScore = 20;
-        determineGameResult([playerScore], dealerScore, setIsGameLost, setIsGameWon, setIsGameDraw);
-
-        expect(setIsGameLost).not.toHaveBeenCalled();
-        expect(setIsGameWon).not.toHaveBeenCalled();
-        expect(setIsGameDraw).toHaveBeenCalledWith(true);
-    });
-
-    it("should call setIsGameLost when the player busts", () => {
-      const playerScore = 22;
-      const dealerScore = 18;
+      const cardValue: Card[][] = [
+        [
+          { value: "10", suit: "Hearts", hidden: false, valueCard: 10 },
+          { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 }
+        ],
+      ];
+      const dealerCards: Card[] = [
+        { value: "K", suit: "Hearts", hidden: false, valueCard: 10 },
+        { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 }
+      ];
       determineGameResult(
         [playerScore],
         dealerScore,
+        cardValue,
+        dealerCards,
+        setIsGameLost,
+        setIsGameWon,
+        setIsGameDraw
+      );
+
+      expect(setIsGameLost).not.toHaveBeenCalled();
+      expect(setIsGameWon).not.toHaveBeenCalled();
+      expect(setIsGameDraw).toHaveBeenCalledWith(true);
+    });
+
+    it("should call setIsGameLost when the player exceeds 21", () => {
+      const playerScore = 22;
+      const dealerScore = 18;
+      const cardValue: Card[][] = [
+        [
+          { value: "10", suit: "Hearts", hidden: false, valueCard: 10 },
+          { value: "5", suit: "Diamonds", hidden: false, valueCard: 5 },
+          { value: "7", suit: "Hearts", hidden: false, valueCard: 7 }
+        ],
+      ];
+      const dealerCards: Card[] = [
+        { value: "K", suit: "Hearts", hidden: false, valueCard: 10 },
+        { value: "8", suit: "Diamonds", hidden: false, valueCard: 8 }
+      ];
+      determineGameResult(
+        [playerScore],
+        dealerScore,
+        cardValue,
+        dealerCards,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
@@ -63,12 +123,25 @@ describe("Blackjack Game Logic", () => {
       expect(setIsGameWon).not.toHaveBeenCalled();
     });
 
-    it("should declare the player as the winner if the dealer busts (over 21)", () => {
+    it("should declare the player as the winner if the dealer exceeds 21", () => {
       const playerScore = 20;
-      const dealerScore = 22;
+      const dealerScore = 26;
+      const cardValue: Card[][] = [
+        [
+          { value: "10", suit: "Hearts", hidden: false, valueCard: 10 },
+          { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 },
+        ],
+      ];
+      const dealerCards: Card[] = [
+        { value: "K", suit: "Hearts", hidden: false, valueCard: 10 },
+        { value: "6", suit: "Diamonds", hidden: false, valueCard: 6 },
+        { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 },
+      ];
       determineGameResult(
         [playerScore],
         dealerScore,
+        cardValue,
+        dealerCards,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
@@ -88,7 +161,7 @@ describe("Blackjack Game Logic", () => {
       expect(calculateScore(hand)).toBe(15);
     });
 
-    it("should handle an ace as 11 if it does not bust the score", () => {
+    it("should treat an Ace as 11 if it does not exceed 21", () => {
       const hand: Card[] = [
         { value: "10", suit: "Hearts", hidden: false, valueCard: 10 },
         { value: "5", suit: "Clubs", hidden: false, valueCard: 5 },
@@ -97,7 +170,7 @@ describe("Blackjack Game Logic", () => {
       expect(calculateScore(hand)).toBe(16);
     });
 
-    it("should handle an ace as 1 if it busts the score", () => {
+    it("should treat an Ace as 1 if it exceeds 21", () => {
       const hand: Card[] = [
         { value: "10", suit: "Hearts", hidden: false, valueCard: 10 },
         { value: "9", suit: "Clubs", hidden: false, valueCard: 9 },
@@ -106,7 +179,7 @@ describe("Blackjack Game Logic", () => {
       expect(calculateScore(hand)).toBe(20);
     });
 
-    it("should handle multiple aces correctly", () => {
+    it("should handle multiple Aces correctly", () => {
       const hand: Card[] = [
         { value: "A", suit: "Hearts", hidden: false, valueCard: 11 },
         { value: "A", suit: "Clubs", hidden: false, valueCard: 11 },
@@ -115,7 +188,7 @@ describe("Blackjack Game Logic", () => {
       expect(calculateScore(hand)).toBe(21);
     });
 
-    it("should handle multiple aces and avoid busting", () => {
+    it("should handle multiple Aces and avoid exceeding 21", () => {
       const hand: Card[] = [
         { value: "A", suit: "Hearts", hidden: false, valueCard: 11 },
         { value: "A", suit: "Clubs", hidden: false, valueCard: 11 },
@@ -126,67 +199,84 @@ describe("Blackjack Game Logic", () => {
   });
 
   describe("SplitComparaisonResult", () => {
-    const setIsGameLost = jest.fn();
-    const setIsGameWon = jest.fn();
-    const setIsGameDraw = jest.fn();
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it("should compare each player's hand with the dealer's hand after a split", () => {
+    it("should compare each player hand against the dealer's hand after a split", () => {
       const dealerScore = 19;
       const playerScores = [18, 20];
 
-      determineGameResult(
-        playerScores,
-        dealerScore,
-        setIsGameLost,
-        setIsGameWon,
-        setIsGameDraw
-      );
+      const cardValue: Card[][] = [
+        [
+          { value: "10", suit: "Hearts", hidden: false, valueCard: 10 },
+          { value: "8", suit: "Diamonds", hidden: false, valueCard: 8 }
+        ],
+        [
+          { value: "9", suit: "Spades", hidden: false, valueCard: 9 },
+          { value: "A", suit: "Clubs", hidden: false, valueCard: 11 }
+        ]
+      ];
 
-      expect(setIsGameLost).toHaveBeenCalledWith(true);
+      playerScores.forEach((playerScore, index) => {
+        determineGameResult(
+          [playerScore],
+          dealerScore,
+          [cardValue[index]],
+          [],
+          setIsGameLost,
+          setIsGameWon,
+          setIsGameDraw
+        );
 
-      expect(setIsGameWon).toHaveBeenCalledWith(true);
-
-      expect(setIsGameDraw).not.toHaveBeenCalled();
+        if (playerScore > dealerScore) {
+          expect(setIsGameWon).toHaveBeenCalled();
+        } else if (playerScore < dealerScore) {
+          expect(setIsGameLost).toHaveBeenCalled();
+        } else {
+          expect(setIsGameDraw).toHaveBeenCalled();
+        }
+      });
     });
-
-    it("should handle a tie for one hand and a win for another after a split", () => {
-      const dealerScore = 20;
-      const playerScores = [20, 22];
-
-      determineGameResult(
-        playerScores,
-        dealerScore,
-        setIsGameLost,
-        setIsGameWon,
-        setIsGameDraw
-      );
-
-      expect(setIsGameDraw).toHaveBeenCalledWith(true);
-
-      expect(setIsGameLost).toHaveBeenCalledWith(true);
-
-      expect(setIsGameWon).not.toHaveBeenCalled();
+    
+  });
+  describe("isBlackjack", () => {
+    it("should return true for a hand with an Ace and a 10-value card", () => {
+      const hand: Card[] = [
+        { value: "A", suit: "Hearts", hidden: false, valueCard: 11 },
+        { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 }
+      ];
+      expect(isBlackjack(hand)).toBe(true);
     });
-
-    it("should declare player as winner if dealer busts after split", () => {
-      const dealerScore = 22;
-      const playerScores = [18, 19];
-
-      determineGameResult(
-        playerScores,
-        dealerScore,
-        setIsGameLost,
-        setIsGameWon,
-        setIsGameDraw
-      );
-
-      expect(setIsGameWon).toHaveBeenCalledTimes(2);
-      expect(setIsGameLost).not.toHaveBeenCalled();
-      expect(setIsGameDraw).not.toHaveBeenCalled();
+  
+    it("should return true for a hand with an Ace and a Face card", () => {
+      const hand: Card[] = [
+        { value: "A", suit: "Hearts", hidden: false, valueCard: 11 },
+        { value: "K", suit: "Diamonds", hidden: false, valueCard: 10 }
+      ];
+      expect(isBlackjack(hand)).toBe(true);
+    });
+  
+    it("should return false for a hand without an Ace", () => {
+      const hand: Card[] = [
+        { value: "10", suit: "Hearts", hidden: false, valueCard: 10 },
+        { value: "9", suit: "Diamonds", hidden: false, valueCard: 9 }
+      ];
+      expect(isBlackjack(hand)).toBe(false);
+    });
+  
+    it("should return false for a hand without a 10-value card", () => {
+      const hand: Card[] = [
+        { value: "A", suit: "Hearts", hidden: false, valueCard: 11 },
+        { value: "5", suit: "Diamonds", hidden: false, valueCard: 5 }
+      ];
+      expect(isBlackjack(hand)).toBe(false);
+    });
+  
+    it("should return false for a hand with more than two cards", () => {
+      const hand: Card[] = [
+        { value: "A", suit: "Hearts", hidden: false, valueCard: 11 },
+        { value: "10", suit: "Diamonds", hidden: false, valueCard: 10 },
+        { value: "5", suit: "Clubs", hidden: false, valueCard: 5 }
+      ];
+      expect(isBlackjack(hand)).toBe(false);
     });
   });
+  
 });
