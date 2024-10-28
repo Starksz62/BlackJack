@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { drawDealerCard, calculateScore, determineGameResult } from '../Utils';
+import { drawDealerCard, calculateScore, determineGameResult, isBlackjack } from '../Utils';
 import { useSplitCards } from "../Context/SplitContext";
 import { Card, createDeck, shuffleDeck } from '../Components/Deck';
 import Player from '../Player';
@@ -20,19 +20,38 @@ const Game: React.FC = () => {
 
 
     const { splitCards } = useSplitCards(); 
-    const drawCards = useCallback(async () => {
+    const drawCards = useCallback( () => {
         if (deck.length > deck.length / 2) {
             const playerFirstCard = deck[0];
             const playerSecondCard = deck[1];
             const dealerFirstCard = deck[2];
             const dealerSecondCard: Card = { ...deck[3], hidden: true as const };
-
-            setCardValue([playerFirstCard, playerSecondCard]);
-            setDealerCards([dealerFirstCard, dealerSecondCard]);
+    
+            const initialPlayerCards = [playerFirstCard, playerSecondCard];
+            const initialDealerCards = [dealerFirstCard, dealerSecondCard];
+    
+            setCardValue(initialPlayerCards);
+            setDealerCards(initialDealerCards);
             setDeck(deck.slice(4));
             setIsTwoCardDrawn(true);
-            console.log("Player's cards:", playerSecondCard, playerFirstCard);
-
+    
+            if (isBlackjack(initialPlayerCards)) {
+                setDealerCards([dealerFirstCard, { ...dealerSecondCard, hidden: false }]);
+    
+                if (isBlackjack([dealerFirstCard, dealerSecondCard])) {
+                    setIsGameDraw(true);
+                    setGameResult("draw");
+                    console.log("Both player and dealer have blackjack! It's a draw.");
+                } else {
+                    setIsGameWon(true);
+                    setGameResult("Blackjack");
+                    console.log("Player has blackjack! Player wins.");
+                }
+            }
+    
+    
+            console.log("Player's cards:", initialPlayerCards);
+            console.log("Dealer's cards:", initialDealerCards);
         }
     }, [deck]);
 
@@ -56,17 +75,42 @@ const Game: React.FC = () => {
     
                 const visibleDealerCards = newDealerCards.filter(card => !card.hidden);
                 const dealerScore = calculateScore(visibleDealerCards);
+                
+                console.log("Dealer's Cards:", newDealerCards);
+                console.log("Dealer Score:", dealerScore);
+                
+                if (isBlackjack(newDealerCards)) {
+                    setIsGameLost(true);
+                    setGameResult("Blackjack du croupier !");
+                    return updatedDeck; 
+                }
     
-                const playerScores = splitCards ? splitCards.map(hand => calculateScore(hand)) : [cardValue ? calculateScore(cardValue) : 0];
-
-                const results = playerScores.map((playerScore, index) => {
-                    const result = determineGameResult([playerScore], dealerScore, setIsGameLost, setIsGameWon, setIsGameDraw);
-                    return `Hand ${index + 1}: ${result}`;
-                });
-    
-                console.log(results);
-                setGameResult(results.join(" | ")); 
-                return updatedDeck;
+                const playerScores = splitCards
+                ? splitCards.map((hand) => calculateScore(hand))
+                : [cardValue ? calculateScore(cardValue) : 0];
+              
+              const results = playerScores.map((playerScore, index) => {
+                if (cardValue && dealerCards) {
+                  const result = determineGameResult(
+                    [playerScore],    
+                    dealerScore,          
+                    splitCards || [cardValue], 
+                    dealerCards,         
+                    setIsGameLost,      
+                    setIsGameWon,          
+                    setIsGameDraw         
+                  );
+                  
+                  return `Main ${index + 1}: ${result.join(" | ")}`;
+                } else {
+                  console.error("Les cartes du joueur ou du croupier sont null");
+                  return `Main ${index + 1}: Erreur - Cartes manquantes !`;
+                }
+              });
+              
+              console.log(results);
+              setGameResult(results.join(" | "));
+              return updatedDeck;
             });
         }
     }, [dealerCards, cardValue, splitCards]);
@@ -89,7 +133,7 @@ const Game: React.FC = () => {
                         isGameLost={isGameLost}
                         isGameWon={isGameWon}
                         isGameDraw={isGameDraw}
-                        dealerScore={dealerCards ? calculateScore(dealerCards.filter(card => !card.hidden)) : 0} // Calculer le score ici
+                        dealerScore={dealerCards ? calculateScore(dealerCards.filter(card => !card.hidden)) : 0} 
                         resetGame={resetGame}
                         
                     />
