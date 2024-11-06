@@ -5,9 +5,12 @@ import { Card, createDeck, shuffleDeck } from '../Components/Deck';
 import Player from '../Player';
 import PlayerControls from './PlayerControls';
 import Dealer from './Dealer';
+import Wallet from './Wallet';
 
 const Game: React.FC = () => {
     const totalDecks = 7;
+    const [currentBalance, setBalance] = useState(100);
+    const betAmount = useState(10);
     const [deck, setDeck] = useState<Card[]>(shuffleDeck(createDeck(totalDecks)));
     const [cardValue, setCardValue] = useState<Card[] | null>(null);
     const [dealerCards, setDealerCards] = useState<Card[] | null>(null);
@@ -38,7 +41,7 @@ const Game: React.FC = () => {
             if (isBlackjack(initialPlayerCards)) {
                 setDealerCards([dealerFirstCard, { ...dealerSecondCard, hidden: false }]);
     
-                if (isBlackjack([dealerFirstCard, dealerSecondCard])) {
+                if (isBlackjack(initialDealerCards)) {
                     setIsGameDraw(true);
                     setGameResult("draw");
                     console.log("Both player and dealer have blackjack! It's a draw.");
@@ -95,7 +98,10 @@ const Game: React.FC = () => {
                     [playerScore],    
                     dealerScore,          
                     splitCards || [cardValue], 
-                    dealerCards,         
+                    dealerCards,
+                    currentBalance,
+                    betAmount[0],
+                    setBalance,        
                     setIsGameLost,      
                     setIsGameWon,          
                     setIsGameDraw         
@@ -142,6 +148,7 @@ const Game: React.FC = () => {
                 <button onClick={resetGame}>Restart Game</button>
             )}
             <Player cardValue={cardValue} />
+            <Wallet balance={currentBalance} />
          
         </>
     );

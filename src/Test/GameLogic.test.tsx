@@ -6,7 +6,9 @@ describe("Blackjack Game Logic", () => {
   const setIsGameLost = jest.fn();
   const setIsGameWon = jest.fn();
   const setIsGameDraw = jest.fn();
-
+const betAmount = 10;
+const currentBalance = 100;
+const setBalance = jest.fn();
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -30,6 +32,9 @@ describe("Blackjack Game Logic", () => {
         dealerScore,
         cardValue,
         dealerCards,
+        currentBalance,
+        betAmount,
+        setBalance,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
@@ -42,6 +47,7 @@ describe("Blackjack Game Logic", () => {
     it("should declare the dealer as the winner if their score is higher than the player's", () => {
       const playerScore = 17;
       const dealerScore = 19;
+      
       const cardValue: Card[][] = [
         [
           { value: "7", suit: "Hearts", hidden: false, valueCard: 7 },
@@ -57,6 +63,9 @@ describe("Blackjack Game Logic", () => {
         dealerScore,
         cardValue,
         dealerCards,
+        currentBalance,
+        betAmount,
+        setBalance,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
@@ -85,6 +94,9 @@ describe("Blackjack Game Logic", () => {
         dealerScore,
         cardValue,
         dealerCards,
+        currentBalance,
+        betAmount,
+        setBalance,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
@@ -114,6 +126,9 @@ describe("Blackjack Game Logic", () => {
         dealerScore,
         cardValue,
         dealerCards,
+        currentBalance,
+        betAmount,
+        setBalance,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
@@ -142,6 +157,9 @@ describe("Blackjack Game Logic", () => {
         dealerScore,
         cardValue,
         dealerCards,
+        currentBalance,
+        betAmount,
+        setBalance,
         setIsGameLost,
         setIsGameWon,
         setIsGameDraw
@@ -220,6 +238,9 @@ describe("Blackjack Game Logic", () => {
           dealerScore,
           [cardValue[index]],
           [],
+          currentBalance,
+          betAmount,
+          setBalance,
           setIsGameLost,
           setIsGameWon,
           setIsGameDraw
