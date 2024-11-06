@@ -56,54 +56,108 @@ export const determineGameResult = (
   dealerScore: number,
   cardValue: Card[][],
   dealerCards: Card[],
+  currentBalance: number,
+  betAmount: number,
+  setBalance: React.Dispatch<React.SetStateAction<number>>,
   setIsGameLost: React.Dispatch<React.SetStateAction<boolean>>,
   setIsGameWon: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsGameDraw: React.Dispatch<React.SetStateAction<boolean>>
+  setIsGameDraw: React.Dispatch<React.SetStateAction<boolean>>,
+
 ): string[] => {
   const results: string[] = [];
-  const dealerHasBlackjack = isBlackjack(dealerCards);
 
+   const updateGameStatus = (gameStatus: "win" | "lose" | "draw") => {
+    
+    switch (gameStatus) {
+      case "win":
+        setIsGameWon(true);
+        break;
+      case "lose":
+        setIsGameLost(true);
+        break;
+      case "draw":
+        setIsGameDraw(true);
+        break;
+    }
+    return gameStatus;
+  };
   playerScores.forEach((playerScore, index) => {
     const playerCards = cardValue[index];
+    const dealerHasBlackjack = isBlackjack(dealerCards);
     const playerHasBlackjack = isBlackjack(playerCards);
+    let resultMessage = "";
+    let gameStatus: "win" | "lose" | "draw"; 
+   
 
     if (playerScore > 21) {
-      setIsGameLost(true);
-      results.push(`Le joueur a perdu avec cette main ${index + 1} !`);
+      updateGameStatus("lose");
+      resultMessage = `Le joueur a perdu avec cette main ${index + 1} !`;
+      gameStatus = "lose";
     } else if (dealerScore > 21) {
-      setIsGameWon(true);
-      results.push(`Le joueur a gagné avec cette main ${index + 1} !`);
+      updateGameStatus("win");
+      resultMessage = `Le joueur a gagné avec cette main ${index + 1} !`;
+      gameStatus = "win";
     } else if (playerHasBlackjack && dealerHasBlackjack) {
-      setIsGameDraw(true);
-      results.push(`Égalité avec Blackjack sur la main ${index + 1} !`);
+      updateGameStatus("draw");
+      resultMessage = `Égalité avec Blackjack sur la main ${index + 1} !`;
+      gameStatus = "draw";
     } else if (playerHasBlackjack) {
-      setIsGameWon(true);
-      results.push(`Le joueur a gagné avec Blackjack sur la main ${index + 1} !`);
+      updateGameStatus("win");
+      resultMessage = `Le joueur a gagné avec Blackjack sur la main ${index + 1} !`;
+      gameStatus = "win";
     } else if (dealerHasBlackjack) {
-      setIsGameLost(true);
-      results.push(`Blackjack du croupier, le joueur a perdu sur la main ${index + 1} !`);
+      updateGameStatus("lose");
+      resultMessage = `Blackjack du croupier, le joueur a perdu sur la main ${index + 1} !`;
+      gameStatus = "lose";
     } else if (playerScore === dealerScore) {
-      setIsGameDraw(true);
-      results.push(`Égalité sur la main ${index + 1} !`);
+      updateGameStatus("draw");
+      resultMessage = `Égalité sur la main ${index + 1} !`;
+      gameStatus = "draw";
     } else if (playerScore > dealerScore) {
-      setIsGameWon(true);
-      results.push(`Le joueur a gagné avec cette main ${index + 1} !`);
+      updateGameStatus("win");
+      resultMessage = `Le joueur a gagné avec cette main ${index + 1} !`;
+      gameStatus = "win";
     } else {
-      setIsGameLost(true);
-      results.push(`Le joueur a perdu avec cette main ${index + 1} !`);
+      updateGameStatus("lose");
+      resultMessage = `Le joueur a perdu avec cette main ${index + 1} !`;
+      gameStatus = "lose";
     }
+    
+
+    results.push(resultMessage);
+    updateWallet(gameStatus, playerHasBlackjack,currentBalance, betAmount, setBalance);
   });
+
 
   return results.length ? results : ["Erreur de logique !"];
 };
+export const updateWallet = (
+  gameStatus: "win" | "lose" | "draw",
+  playerHasBlackjack: boolean,
+  currentBalance: number,
+  betAmount: number,
+  setBalance: React.Dispatch<React.SetStateAction<number>>
+) => {
+  let newBalance = currentBalance;
 
+  if (gameStatus === "win") {
+    newBalance += playerHasBlackjack ? betAmount * 2.5 : betAmount;
+    console.log("win", newBalance);
+  } else if (gameStatus === "lose") {
+    newBalance -= betAmount;
+    console.log("lose", newBalance);
+  } else if (gameStatus === "draw") {
+    console.log("draw", newBalance);
+  }
 
-export const isBlackjack = (cards: Card[]): boolean => {
-
-  if (cards.length !== 2) return false;
-
-  const hasAce = cards.some(card => card.value === 'A');
-  const hasFaceOrTenCard  = cards.some(card => ['10', 'J', 'Q', 'K'].includes(card.value));
-
-  return hasAce && hasFaceOrTenCard;
+  setBalance(newBalance);
 };
+export const isBlackjack = (hand: Card[]): boolean => {
+  if (hand.length !== 2) return false;
+
+  const containsAce = hand.some(card => card.value === 'A');
+  const containsFaceOrTen = hand.some(card => ['10', 'J', 'Q', 'K'].includes(card.value));
+
+  return containsAce && containsFaceOrTen;
+};
+
